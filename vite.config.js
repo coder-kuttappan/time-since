@@ -9,13 +9,13 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       manifest: {
         name: 'Time Since',
         short_name: 'Time Since',
-        description: 'Track when you last did something',
-        theme_color: '#FAFAF8',
-        background_color: '#FAFAF8',
+        description: 'Track how long it\'s been since you did the things that matter.',
+        theme_color: '#F5F5F4',
+        background_color: '#F5F5F4',
         display: 'standalone',
         start_url: '/',
         scope: '/',
