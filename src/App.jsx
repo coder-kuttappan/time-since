@@ -5,10 +5,12 @@ import { Toast } from './components/Toast'
 import { InstallBanner } from './components/InstallBanner'
 import { ThemeToggle } from './components/ThemeToggle'
 import { TipsCard } from './components/TipsCard'
+import { UpdatePrompt } from './components/UpdatePrompt'
 import { useItems } from './hooks/useItems'
 import { useToast } from './hooks/useToast'
 import { useInstallPrompt } from './hooks/useInstallPrompt'
 import { useTheme } from './hooks/useTheme'
+import { useServiceWorker } from './hooks/useServiceWorker'
 
 export default function App() {
   const {
@@ -19,6 +21,7 @@ export default function App() {
   const { showBanner, isIOSDevice, install, dismiss } = useInstallPrompt()
   const { toast, showToast, handleUndo } = useToast()
   const { theme, toggleTheme } = useTheme()
+  const { needRefresh, applyUpdate, dismissUpdate } = useServiceWorker()
   const [dismissedExamples, setDismissedExamples] = useState([])
   const [confirmReset, setConfirmReset] = useState(false)
 
@@ -152,6 +155,7 @@ export default function App() {
       </div>
 
       <Toast toast={toast} onUndo={handleUndo} />
+      {needRefresh && <UpdatePrompt onUpdate={applyUpdate} onDismiss={dismissUpdate} />}
     </div>
   )
 }
