@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { formatTimeSince, formatDetailedTime, formatDate } from '../utils/timeFormat'
 
 function toLocalDate(timestamp) {
@@ -22,17 +22,11 @@ function getRecencyColor(timestamp) {
   return '#A08090'
 }
 
-function ItemSheet({ item, onLog, onDelete, onEditTime, onRename, onClose, focusDate }) {
+function ItemSheet({ item, onLog, onDelete, onEditTime, onRename, onClose }) {
   const [nameValue, setNameValue] = useState(item.name)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const latestLog = item.logs[0]
   const dateInputRef = useRef(null)
-
-  useEffect(() => {
-    if (focusDate && dateInputRef.current) {
-      try { dateInputRef.current.showPicker() } catch { /* iOS doesn't support showPicker */ }
-    }
-  }, [])
 
   function handleNameBlur() {
     const trimmed = nameValue.trim()
@@ -152,16 +146,11 @@ function ItemSheet({ item, onLog, onDelete, onEditTime, onRename, onClose, focus
   )
 }
 
-export function ItemCard({ item, onLog, onDelete, onEditTime, onRename, openWithDatePicker, onClearPendingDate }) {
-  const [sheetOpen, setSheetOpen] = useState(openWithDatePicker || false)
+export function ItemCard({ item, onLog, onDelete, onEditTime, onRename }) {
+  const [sheetOpen, setSheetOpen] = useState(false)
   const latestLog = item.logs[0]
   const timeText = formatTimeSince(latestLog)
   const detailText = formatDetailedTime(latestLog)
-
-  function handleClose() {
-    setSheetOpen(false)
-    if (openWithDatePicker) onClearPendingDate?.()
-  }
 
   return (
     <>
@@ -188,8 +177,7 @@ export function ItemCard({ item, onLog, onDelete, onEditTime, onRename, openWith
           onDelete={onDelete}
           onEditTime={onEditTime}
           onRename={onRename}
-          onClose={handleClose}
-          focusDate={openWithDatePicker}
+          onClose={() => setSheetOpen(false)}
         />
       )}
     </>

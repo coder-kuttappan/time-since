@@ -15,18 +15,14 @@ import { useServiceWorker } from './hooks/useServiceWorker'
 export default function App() {
   const {
     items, examples, addItem, logItem, undoLog,
-    deleteItem, undoDelete, dismissExamples, adoptExample, adoptAllExamples, editTime, renameItem, resetAll,
+    deleteItem, undoDelete, editTime, renameItem, resetAll,
     exportData, importData,
   } = useItems()
   const { showBanner, isIOSDevice, install, dismiss } = useInstallPrompt()
   const { toast, showToast, handleUndo } = useToast()
   const { theme, toggleTheme } = useTheme()
   const { needRefresh, applyUpdate, dismissUpdate } = useServiceWorker()
-  const [dismissedExamples, setDismissedExamples] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('ts-dismissed-examples') || '[]') } catch { return [] }
-  })
   const [sortMode, setSortMode] = useState(() => localStorage.getItem('ts-sort-mode') || null)
-  const [pendingDateItemId, setPendingDateItemId] = useState(null)
 
   const cycleSortMode = useCallback(() => {
     setSortMode((prev) => {
@@ -46,9 +42,7 @@ export default function App() {
 
   const handleAdd = useCallback((name) => {
     const item = addItem(name)
-    if (item) {
-      showToast(`Added "${item.name}"`)
-    }
+    if (item) showToast(`Added "${item.name}"`)
   }, [addItem, showToast])
 
   const handleLog = useCallback((id) => {
@@ -61,46 +55,11 @@ export default function App() {
   const handleDelete = useCallback((id) => {
     const idx = items.findIndex((i) => i.id === id)
     const deleted = deleteItem(id)
-    if (deleted) {
-      showToast(`Deleted "${deleted.name}"`, () => undoDelete(deleted, idx))
-    }
+    if (deleted) showToast(`Deleted "${deleted.name}"`, () => undoDelete(deleted, idx))
   }, [items, deleteItem, undoDelete, showToast])
-
-  const handleDismissExample = useCallback((id) => {
-    setDismissedExamples((prev) => {
-      const next = [...prev, id]
-      localStorage.setItem('ts-dismissed-examples', JSON.stringify(next))
-      return next
-    })
-  }, [])
-
-  const handleAdoptExample = useCallback((example) => {
-    const item = adoptExample(example)
-    setDismissedExamples((prev) => {
-      const next = [...prev, example.id]
-      localStorage.setItem('ts-dismissed-examples', JSON.stringify(next))
-      return next
-    })
-    setPendingDateItemId(item.id)
-  }, [adoptExample])
-
-  const visibleExamples = examples.filter((e) => !dismissedExamples.includes(e.id))
-
-  const handleAdoptAllExamples = useCallback(() => {
-    adoptAllExamples(visibleExamples)
-    setDismissedExamples([])
-    showToast(`Kept ${visibleExamples.length} items`)
-  }, [adoptAllExamples, visibleExamples, showToast])
-
-  const handleDismissAllExamples = useCallback(() => {
-    dismissExamples()
-    localStorage.removeItem('ts-dismissed-examples')
-  }, [dismissExamples])
 
   const handleReset = useCallback(() => {
     resetAll()
-    setDismissedExamples([])
-    localStorage.removeItem('ts-dismissed-examples')
     showToast('Reset complete')
   }, [resetAll, showToast])
 
@@ -148,21 +107,14 @@ export default function App() {
 
         <ItemList
           items={sortedItems}
-          examples={visibleExamples}
+          examples={examples}
           onLog={handleLog}
           onDelete={handleDelete}
           onEditTime={editTime}
           onRename={renameItem}
-          onDismissExample={handleDismissExample}
-          onAdoptExample={handleAdoptExample}
-          onAdoptAllExamples={handleAdoptAllExamples}
-          onDismissAllExamples={handleDismissAllExamples}
-          pendingDateItemId={pendingDateItemId}
-          onClearPendingDate={() => setPendingDateItemId(null)}
         />
       </div>
 
-      {/* Branding footer */}
       <div className="max-w-lg mx-auto px-4 pb-6 pt-4 text-center">
         <span className="text-xs text-text-secondary/40">
           Built by <a href="https://github.com/coder-kuttappan" className="text-accent/50 hover:text-accent hover:underline transition-colors">Coder Kuttappan</a>
