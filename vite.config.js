@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  base: '/time-since/',
   plugins: [
     react(),
     tailwindcss(),
@@ -16,14 +17,16 @@ export default defineConfig({
         theme_color: '#FAFAF8',
         background_color: '#FAFAF8',
         display: 'standalone',
+        start_url: '/time-since/',
+        scope: '/time-since/',
         icons: [
           {
-            src: '/icons/icon-192.png',
+            src: 'icons/icon-192.png',
             sizes: '192x192',
             type: 'image/png',
           },
           {
-            src: '/icons/icon-512.png',
+            src: 'icons/icon-512.png',
             sizes: '512x512',
             type: 'image/png',
           },

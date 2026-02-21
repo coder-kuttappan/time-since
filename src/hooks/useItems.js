@@ -141,10 +141,55 @@ export function useItems() {
     localStorage.setItem(EXAMPLES_DISMISSED_KEY, 'true')
   }, [])
 
+  const exportData = useCallback(() => {
+    const data = { version: 1, exportedAt: new Date().toISOString(), items }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `time-since-backup-${new Date().toISOString().split('T')[0]}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [items])
+
+  const importData = useCallback(() => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.json'
+    input.onchange = (e) => {
+      const file = e.target.files?.[0]
+      if (!file) return
+      const reader = new FileReader()
+      reader.onload = (ev) => {
+        try {
+          const data = JSON.parse(ev.target.result)
+          const imported = data.items || data
+          if (!Array.isArray(imported)) return
+          // Validate shape
+          const valid = imported.every((item) => item.name && Array.isArray(item.logs))
+          if (!valid) return
+          // Re-ID to avoid collisions
+          const reIded = imported.map((item) => ({
+            ...item,
+            id: crypto.randomUUID(),
+          }))
+          setItems(reIded)
+          setShowExamples(false)
+          localStorage.setItem(EXAMPLES_DISMISSED_KEY, 'true')
+        } catch {
+          // silently fail on bad files
+        }
+      }
+      reader.readAsText(file)
+    }
+    input.click()
+  }, [])
+
   const examples = showExamples ? EXAMPLE_ITEMS : []
 
   return {
     items, examples, addItem, logItem, undoLog,
     deleteItem, undoDelete, dismissExamples, adoptExample, adoptAllExamples, editTime, renameItem, resetAll,
+    exportData, importData,
   }
 }

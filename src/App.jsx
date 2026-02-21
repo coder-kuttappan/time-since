@@ -2,14 +2,18 @@ import { useState, useCallback } from 'react'
 import { AddItem } from './components/AddItem'
 import { ItemList } from './components/ItemList'
 import { Toast } from './components/Toast'
+import { InstallBanner } from './components/InstallBanner'
 import { useItems } from './hooks/useItems'
 import { useToast } from './hooks/useToast'
+import { useInstallPrompt } from './hooks/useInstallPrompt'
 
 export default function App() {
   const {
     items, examples, addItem, logItem, undoLog,
     deleteItem, undoDelete, dismissExamples, adoptExample, adoptAllExamples, editTime, renameItem, resetAll,
+    exportData, importData,
   } = useItems()
+  const { showBanner, isIOSDevice, install, dismiss } = useInstallPrompt()
   const { toast, showToast, handleUndo } = useToast()
   const [dismissedExamples, setDismissedExamples] = useState([])
   const [confirmReset, setConfirmReset] = useState(false)
@@ -65,6 +69,10 @@ export default function App() {
           time since...
         </h1>
 
+        {showBanner && (
+          <InstallBanner isIOS={isIOSDevice} onInstall={install} onDismiss={dismiss} />
+        )}
+
         <AddItem onAdd={handleAdd} />
 
         <ItemList
@@ -81,33 +89,49 @@ export default function App() {
         />
       </div>
 
-      {/* Reset footer */}
+      {/* Footer — data management */}
       {(items.length > 0 || visibleExamples.length > 0) && (
-        <div className="max-w-lg mx-auto px-4 pb-8 text-center">
-          {confirmReset ? (
-            <div className="flex items-center justify-center gap-3">
-              <span className="text-xs text-text-secondary">Clear everything?</span>
-              <button
-                onClick={() => { resetAll(); setDismissedExamples([]); setConfirmReset(false); showToast('Reset complete') }}
-                className="text-xs text-red-400 font-medium hover:text-red-500 transition-colors cursor-pointer"
-              >
-                Yes, reset
-              </button>
-              <button
-                onClick={() => setConfirmReset(false)}
-                className="text-xs text-text-secondary/50 hover:text-text-secondary transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-            </div>
-          ) : (
+        <div className="max-w-lg mx-auto px-4 pb-8">
+          <div className="flex items-center justify-center gap-4">
             <button
-              onClick={() => setConfirmReset(true)}
+              onClick={() => { exportData(); showToast('Data exported') }}
               className="text-xs text-text-secondary/40 hover:text-text-secondary/70 transition-colors cursor-pointer"
             >
-              reset
+              export
             </button>
-          )}
+            <span className="text-text-secondary/20">·</span>
+            <button
+              onClick={() => importData()}
+              className="text-xs text-text-secondary/40 hover:text-text-secondary/70 transition-colors cursor-pointer"
+            >
+              import
+            </button>
+            <span className="text-text-secondary/20">·</span>
+            {confirmReset ? (
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-text-secondary">Clear everything?</span>
+                <button
+                  onClick={() => { resetAll(); setDismissedExamples([]); setConfirmReset(false); showToast('Reset complete') }}
+                  className="text-xs text-red-400 font-medium hover:text-red-500 transition-colors cursor-pointer"
+                >
+                  Yes, reset
+                </button>
+                <button
+                  onClick={() => setConfirmReset(false)}
+                  className="text-xs text-text-secondary/50 hover:text-text-secondary transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirmReset(true)}
+                className="text-xs text-text-secondary/40 hover:text-text-secondary/70 transition-colors cursor-pointer"
+              >
+                reset
+              </button>
+            )}
+          </div>
         </div>
       )}
 
