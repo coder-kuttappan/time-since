@@ -108,9 +108,10 @@ export function useItems() {
     const item = {
       id: crypto.randomUUID(),
       name: example.name,
-      logs: [...example.logs],
+      logs: [Date.now()],
     }
     setItems((prev) => [...prev, item])
+    return item
   }, [])
 
   const resetAll = useCallback(() => {
