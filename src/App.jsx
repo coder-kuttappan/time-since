@@ -3,9 +3,11 @@ import { AddItem } from './components/AddItem'
 import { ItemList } from './components/ItemList'
 import { Toast } from './components/Toast'
 import { InstallBanner } from './components/InstallBanner'
+import { ThemeToggle } from './components/ThemeToggle'
 import { useItems } from './hooks/useItems'
 import { useToast } from './hooks/useToast'
 import { useInstallPrompt } from './hooks/useInstallPrompt'
+import { useTheme } from './hooks/useTheme'
 
 export default function App() {
   const {
@@ -15,6 +17,7 @@ export default function App() {
   } = useItems()
   const { showBanner, isIOSDevice, install, dismiss } = useInstallPrompt()
   const { toast, showToast, handleUndo } = useToast()
+  const { theme, toggleTheme } = useTheme()
   const [dismissedExamples, setDismissedExamples] = useState([])
   const [confirmReset, setConfirmReset] = useState(false)
 
@@ -65,9 +68,12 @@ export default function App() {
   return (
     <div className="min-h-screen bg-bg">
       <div className="max-w-lg mx-auto px-4 py-8 pb-24">
-        <h1 className="font-display text-4xl text-text/80 mb-8 font-normal">
-          time since...
-        </h1>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="font-display text-4xl text-text/80 font-normal">
+            time since...
+          </h1>
+          <ThemeToggle theme={theme} onToggle={toggleTheme} />
+        </div>
 
         {showBanner && (
           <InstallBanner isIOS={isIOSDevice} onInstall={install} onDismiss={dismiss} />
