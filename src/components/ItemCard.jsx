@@ -85,11 +85,6 @@ export function ItemCard({ item, onLog, onDelete, onEditTime, onRename }) {
     }
   }
 
-  function handleTimeClick(e) {
-    e.stopPropagation()
-    dateInputRef.current?.showPicker()
-  }
-
   function handleLog(e) {
     e.stopPropagation()
     onLog(item.id)
@@ -149,24 +144,24 @@ export function ItemCard({ item, onLog, onDelete, onEditTime, onRename }) {
 
         {/* Time — tap to open date picker, with extra left padding for tap target separation */}
         <span
-          className="text-accent font-semibold text-lg tabular-nums whitespace-nowrap pl-2
+          className="relative text-accent font-semibold text-lg tabular-nums whitespace-nowrap pl-2
             cursor-pointer hover:underline hover:decoration-accent/30 hover:underline-offset-4 transition-all"
-          onClick={handleTimeClick}
           title={detailText}
         >
           {timeText}
+          {/* Date input overlaid on time text — native tap opens picker on iOS */}
+          <input
+            ref={dateInputRef}
+            type="date"
+            defaultValue={toLocalDate(latestLog)}
+            onChange={handleDateChange}
+            onClick={(e) => e.stopPropagation()}
+            max={getTodayStr()}
+            className="absolute inset-0 opacity-0 cursor-pointer"
+            style={{ width: '100%', height: '100%' }}
+            tabIndex={-1}
+          />
         </span>
-
-        {/* Hidden date input */}
-        <input
-          ref={dateInputRef}
-          type="date"
-          defaultValue={toLocalDate(latestLog)}
-          onChange={handleDateChange}
-          max={getTodayStr()}
-          className="absolute opacity-0 pointer-events-none w-0 h-0"
-          tabIndex={-1}
-        />
       </div>
 
       {/* Expanded view */}
