@@ -1,25 +1,18 @@
 import { useState, useCallback, useEffect } from 'react'
-import { STORAGE_KEY, EXAMPLES_DISMISSED_KEY, EXAMPLE_ITEMS } from '../constants'
+import { STORAGE_KEY, EXAMPLE_ITEMS } from '../constants'
 
 function loadItems() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return []
     const items = JSON.parse(raw)
-    // Migrate old single-timestamp items to logs array
     return items.map((item) => {
-      if (!item.logs) {
-        return { ...item, logs: [item.lastLogged] }
-      }
+      if (!item.logs) return { ...item, logs: [item.lastLogged] }
       return item
     })
   } catch {
     return []
   }
-}
-
-function isExamplesDismissed() {
-  return localStorage.getItem(EXAMPLES_DISMISSED_KEY) === 'true'
 }
 
 function saveItems(items) {
@@ -28,9 +21,6 @@ function saveItems(items) {
 
 export function useItems() {
   const [items, setItems] = useState(loadItems)
-  const [showExamples, setShowExamples] = useState(() => {
-    return !isExamplesDismissed()
-  })
 
   useEffect(() => {
     saveItems(items)
@@ -39,11 +29,10 @@ export function useItems() {
   const addItem = useCallback((name, when = null) => {
     const trimmed = name.trim()
     if (!trimmed) return null
-    const ts = when || Date.now()
     const item = {
       id: crypto.randomUUID(),
       name: trimmed,
-      logs: [ts],
+      logs: [when || Date.now()],
     }
     setItems((prev) => [item, ...prev])
     return item
@@ -99,28 +88,6 @@ export function useItems() {
     )
   }, [])
 
-  const dismissExamples = useCallback(() => {
-    setShowExamples(false)
-    localStorage.setItem(EXAMPLES_DISMISSED_KEY, 'true')
-  }, [])
-
-  const adoptExample = useCallback((example) => {
-    const item = {
-      id: crypto.randomUUID(),
-      name: example.name,
-      logs: [Date.now()],
-    }
-    setItems((prev) => [...prev, item])
-    return item
-  }, [])
-
-  const resetAll = useCallback(() => {
-    setItems([])
-    setShowExamples(true)
-    localStorage.removeItem(STORAGE_KEY)
-    localStorage.removeItem(EXAMPLES_DISMISSED_KEY)
-  }, [])
-
   const renameItem = useCallback((id, newName) => {
     const trimmed = newName.trim()
     if (!trimmed) return
@@ -131,15 +98,9 @@ export function useItems() {
     )
   }, [])
 
-  const adoptAllExamples = useCallback((visibleExamples) => {
-    const newItems = visibleExamples.map((ex) => ({
-      id: crypto.randomUUID(),
-      name: ex.name,
-      logs: [...ex.logs],
-    }))
-    setItems((prev) => [...prev, ...newItems])
-    setShowExamples(false)
-    localStorage.setItem(EXAMPLES_DISMISSED_KEY, 'true')
+  const resetAll = useCallback(() => {
+    setItems([])
+    localStorage.removeItem(STORAGE_KEY)
   }, [])
 
   const exportData = useCallback(() => {
@@ -166,17 +127,10 @@ export function useItems() {
           const data = JSON.parse(ev.target.result)
           const imported = data.items || data
           if (!Array.isArray(imported)) return
-          // Validate shape
           const valid = imported.every((item) => item.name && Array.isArray(item.logs))
           if (!valid) return
-          // Re-ID to avoid collisions
-          const reIded = imported.map((item) => ({
-            ...item,
-            id: crypto.randomUUID(),
-          }))
+          const reIded = imported.map((item) => ({ ...item, id: crypto.randomUUID() }))
           setItems(reIded)
-          setShowExamples(false)
-          localStorage.setItem(EXAMPLES_DISMISSED_KEY, 'true')
         } catch {
           // silently fail on bad files
         }
@@ -186,11 +140,11 @@ export function useItems() {
     input.click()
   }, [])
 
-  const examples = showExamples ? EXAMPLE_ITEMS : []
+  const examples = items.length === 0 ? EXAMPLE_ITEMS : []
 
   return {
     items, examples, addItem, logItem, undoLog,
-    deleteItem, undoDelete, dismissExamples, adoptExample, adoptAllExamples, editTime, renameItem, resetAll,
+    deleteItem, undoDelete, editTime, renameItem, resetAll,
     exportData, importData,
   }
 }
