@@ -16,15 +16,15 @@ export function TipsCard() {
 
   return (
     <div className="rounded-2xl bg-accent/5 border border-accent/15 px-5 py-4 mb-6">
-      <p className="text-sm font-medium text-text mb-2">Quick tips</p>
-      <ul className="text-xs text-text-secondary leading-relaxed space-y-1.5 mb-3">
-        <li>Tap the <span className="text-accent font-medium">time</span> to change when you last did it</li>
-        <li>Tap an item to expand — rename, log again, or delete</li>
-        <li>Keep the examples below, or clear them and start fresh</li>
-      </ul>
+      <p className="text-sm text-text mb-1.5">
+        <span className="font-medium">Track how long it's been since you did the things that matter.</span>
+      </p>
+      <p className="text-xs text-text-secondary leading-relaxed">
+        Tap the <span className="text-accent font-medium">time</span> to change the date. Tap an item to rename, log, or delete.
+      </p>
       <button
         onClick={handleDismiss}
-        className="text-xs text-accent font-medium hover:text-accent/80 transition-colors cursor-pointer"
+        className="mt-3 text-xs text-accent font-medium hover:text-accent/80 transition-colors cursor-pointer"
       >
         Got it
       </button>
