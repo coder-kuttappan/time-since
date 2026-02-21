@@ -6,8 +6,7 @@ export function formatTimeSince(timestamp) {
   const hours = Math.floor(ms / MS_PER_HOUR)
   const days = Math.floor(ms / MS_PER_DAY)
 
-  if (hours < 1) return 'just now'
-  if (hours < 24) return hours === 1 ? '1 hour' : `${hours} hours`
+  if (days < 1) return 'today'
   if (days < 7) return days === 1 ? '1 day' : `${days} days`
   if (days < 28) {
     const weeks = Math.floor(days / 7)
