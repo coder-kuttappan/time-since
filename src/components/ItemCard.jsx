@@ -187,7 +187,7 @@ export function ItemCard({ item, onLog, onDelete, onEditTime, onRename }) {
                 <button
                   onClick={handleDelete}
                   className="px-4 py-2 rounded-xl text-text-secondary/50 text-sm
-                    hover:bg-red-50 hover:text-red-400 transition-colors cursor-pointer"
+                    hover:bg-red-50 hover:text-red-400 dark:hover:bg-red-950 dark:hover:text-red-400 transition-colors cursor-pointer"
                 >
                   delete
                 </button>
@@ -196,7 +196,7 @@ export function ItemCard({ item, onLog, onDelete, onEditTime, onRename }) {
                   <button
                     onClick={handleConfirmDelete}
                     className="px-3 py-1.5 rounded-xl bg-red-100 text-red-500 text-sm font-medium
-                      hover:bg-red-200 transition-colors cursor-pointer"
+                      hover:bg-red-200 dark:bg-red-950 dark:text-red-400 dark:hover:bg-red-900 transition-colors cursor-pointer"
                   >
                     confirm
                   </button>
