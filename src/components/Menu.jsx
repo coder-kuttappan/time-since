@@ -15,7 +15,7 @@ const HELP_ITEMS = [
   },
   {
     label: 'Edit date',
-    detail: 'Tap the coloured time on any card to change when you last did something.',
+    detail: 'Expand a card to see the logged date and change it.',
   },
   {
     label: 'Rename',
