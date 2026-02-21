@@ -24,6 +24,7 @@ export default function App() {
   const { needRefresh, applyUpdate, dismissUpdate } = useServiceWorker()
   const [dismissedExamples, setDismissedExamples] = useState([])
   const [confirmReset, setConfirmReset] = useState(false)
+  const [confirmExport, setConfirmExport] = useState(false)
 
   const handleAdd = useCallback((name) => {
     const item = addItem(name)
@@ -105,12 +106,30 @@ export default function App() {
       {(items.length > 0 || visibleExamples.length > 0) && (
         <div className="max-w-lg mx-auto px-4 pb-8">
           <div className="flex items-center justify-center gap-4">
-            <button
-              onClick={() => { exportData(); showToast('Data exported') }}
-              className="text-xs text-text-secondary/40 hover:text-text-secondary/70 transition-colors cursor-pointer"
-            >
-              export
-            </button>
+            {confirmExport ? (
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-text-secondary">Download your data?</span>
+                <button
+                  onClick={() => { exportData(); setConfirmExport(false); showToast('Data exported') }}
+                  className="text-xs text-accent font-medium hover:text-accent/80 transition-colors cursor-pointer"
+                >
+                  Yes
+                </button>
+                <button
+                  onClick={() => setConfirmExport(false)}
+                  className="text-xs text-text-secondary/50 hover:text-text-secondary transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirmExport(true)}
+                className="text-xs text-text-secondary/40 hover:text-text-secondary/70 transition-colors cursor-pointer"
+              >
+                export
+              </button>
+            )}
             <span className="text-text-secondary/20">·</span>
             <button
               onClick={() => importData()}
