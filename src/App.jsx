@@ -135,6 +135,13 @@ export default function App() {
         </div>
       )}
 
+      {/* Branding footer */}
+      <div className="max-w-lg mx-auto px-4 pb-6 pt-4 text-center">
+        <span className="text-xs text-text-secondary/40">
+          Built by <a href="https://github.com/coder-kuttappan" className="text-accent/50 hover:text-accent hover:underline transition-colors">Coder Kuttappan</a>
+        </span>
+      </div>
+
       <Toast toast={toast} onUndo={handleUndo} />
     </div>
   )
