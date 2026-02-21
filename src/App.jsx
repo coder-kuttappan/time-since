@@ -1,10 +1,10 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { AddItem } from './components/AddItem'
 import { ItemList } from './components/ItemList'
 import { Toast } from './components/Toast'
 import { InstallBanner } from './components/InstallBanner'
 import { ThemeToggle } from './components/ThemeToggle'
-import { TipsCard } from './components/TipsCard'
+import { Menu } from './components/Menu'
 import { UpdatePrompt } from './components/UpdatePrompt'
 import { useItems } from './hooks/useItems'
 import { useToast } from './hooks/useToast'
@@ -22,9 +22,26 @@ export default function App() {
   const { toast, showToast, handleUndo } = useToast()
   const { theme, toggleTheme } = useTheme()
   const { needRefresh, applyUpdate, dismissUpdate } = useServiceWorker()
-  const [dismissedExamples, setDismissedExamples] = useState([])
-  const [confirmReset, setConfirmReset] = useState(false)
-  const [confirmExport, setConfirmExport] = useState(false)
+  const [dismissedExamples, setDismissedExamples] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('ts-dismissed-examples') || '[]') } catch { return [] }
+  })
+  const [sortMode, setSortMode] = useState(() => localStorage.getItem('ts-sort-mode') || null)
+
+  const cycleSortMode = useCallback(() => {
+    setSortMode((prev) => {
+      const next = prev === null ? 'newest' : prev === 'newest' ? 'oldest' : null
+      if (next === null) localStorage.removeItem('ts-sort-mode')
+      else localStorage.setItem('ts-sort-mode', next)
+      return next
+    })
+  }, [])
+
+  const sortedItems = useMemo(() => {
+    if (!sortMode) return items
+    return [...items].sort((a, b) =>
+      sortMode === 'newest' ? b.logs[0] - a.logs[0] : a.logs[0] - b.logs[0]
+    )
+  }, [items, sortMode])
 
   const handleAdd = useCallback((name) => {
     const item = addItem(name)
@@ -49,12 +66,20 @@ export default function App() {
   }, [items, deleteItem, undoDelete, showToast])
 
   const handleDismissExample = useCallback((id) => {
-    setDismissedExamples((prev) => [...prev, id])
+    setDismissedExamples((prev) => {
+      const next = [...prev, id]
+      localStorage.setItem('ts-dismissed-examples', JSON.stringify(next))
+      return next
+    })
   }, [])
 
   const handleAdoptExample = useCallback((example) => {
     adoptExample(example)
-    setDismissedExamples((prev) => [...prev, example.id])
+    setDismissedExamples((prev) => {
+      const next = [...prev, example.id]
+      localStorage.setItem('ts-dismissed-examples', JSON.stringify(next))
+      return next
+    })
     showToast(`Added "${example.name}"`)
   }, [adoptExample, showToast])
 
@@ -68,28 +93,60 @@ export default function App() {
 
   const handleDismissAllExamples = useCallback(() => {
     dismissExamples()
+    localStorage.removeItem('ts-dismissed-examples')
   }, [dismissExamples])
+
+  const handleReset = useCallback(() => {
+    resetAll()
+    setDismissedExamples([])
+    localStorage.removeItem('ts-dismissed-examples')
+    showToast('Reset complete')
+  }, [resetAll, showToast])
+
+  const handleExport = useCallback(() => {
+    exportData()
+    showToast('Data exported')
+  }, [exportData, showToast])
 
   return (
     <div className="min-h-screen bg-bg">
       <div className="max-w-lg mx-auto px-4 py-8 pb-24">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="font-display text-4xl text-text/80 font-normal">
-            time since...
+          <h1 className="text-xl font-normal text-text/70">
+            time since<span className="text-accent/60">...</span>
           </h1>
-          <ThemeToggle theme={theme} onToggle={toggleTheme} />
+          <div className="flex items-center gap-1">
+            <ThemeToggle theme={theme} onToggle={toggleTheme} />
+            <Menu
+              onExport={handleExport}
+              onImport={importData}
+              onReset={handleReset}
+              hasItems={items.length > 0}
+            />
+          </div>
         </div>
 
         {showBanner && (
           <InstallBanner isIOS={isIOSDevice} onInstall={install} onDismiss={dismiss} />
         )}
 
-        <TipsCard />
-
         <AddItem onAdd={handleAdd} />
 
+        {items.length > 1 && (
+          <div className="flex justify-end mb-2">
+            <button
+              onClick={cycleSortMode}
+              className={`text-xs transition-colors cursor-pointer ${
+                sortMode ? 'text-accent font-medium' : 'text-text-secondary/40 hover:text-text-secondary/70'
+              }`}
+            >
+              {sortMode === 'newest' ? '↑ newest first' : sortMode === 'oldest' ? '↓ oldest first' : 'sort'}
+            </button>
+          </div>
+        )}
+
         <ItemList
-          items={items}
+          items={sortedItems}
           examples={visibleExamples}
           onLog={handleLog}
           onDelete={handleDelete}
@@ -101,70 +158,6 @@ export default function App() {
           onDismissAllExamples={handleDismissAllExamples}
         />
       </div>
-
-      {/* Footer — data management */}
-      {(items.length > 0 || visibleExamples.length > 0) && (
-        <div className="max-w-lg mx-auto px-4 pb-8">
-          <div className="flex items-center justify-center gap-4">
-            {confirmExport ? (
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-text-secondary">Download your data?</span>
-                <button
-                  onClick={() => { exportData(); setConfirmExport(false); showToast('Data exported') }}
-                  className="text-xs text-accent font-medium hover:text-accent/80 transition-colors cursor-pointer"
-                >
-                  Yes
-                </button>
-                <button
-                  onClick={() => setConfirmExport(false)}
-                  className="text-xs text-text-secondary/50 hover:text-text-secondary transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setConfirmExport(true)}
-                className="text-xs text-text-secondary/40 hover:text-text-secondary/70 transition-colors cursor-pointer"
-              >
-                export
-              </button>
-            )}
-            <span className="text-text-secondary/20">·</span>
-            <button
-              onClick={() => importData()}
-              className="text-xs text-text-secondary/40 hover:text-text-secondary/70 transition-colors cursor-pointer"
-            >
-              import
-            </button>
-            <span className="text-text-secondary/20">·</span>
-            {confirmReset ? (
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-text-secondary">Clear everything?</span>
-                <button
-                  onClick={() => { resetAll(); setDismissedExamples([]); setConfirmReset(false); showToast('Reset complete') }}
-                  className="text-xs text-red-400 font-medium hover:text-red-500 transition-colors cursor-pointer"
-                >
-                  Yes, reset
-                </button>
-                <button
-                  onClick={() => setConfirmReset(false)}
-                  className="text-xs text-text-secondary/50 hover:text-text-secondary transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setConfirmReset(true)}
-                className="text-xs text-text-secondary/40 hover:text-text-secondary/70 transition-colors cursor-pointer"
-              >
-                reset
-              </button>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Branding footer */}
       <div className="max-w-lg mx-auto px-4 pb-6 pt-4 text-center">

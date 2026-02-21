@@ -11,6 +11,15 @@ function getTodayStr() {
   return new Date().toISOString().split('T')[0]
 }
 
+function getRecencyColor(timestamp) {
+  const days = (Date.now() - timestamp) / (1000 * 60 * 60 * 24)
+  if (days < 3)  return '#5F9EA0'  // teal — very recent
+  if (days < 14) return '#6BAE8C'  // sage — within 2 weeks
+  if (days < 42) return '#C4A96A'  // amber — within 6 weeks
+  if (days < 90) return '#C4896A'  // terracotta — within 3 months
+  return '#A08090'                 // dusty mauve — long ago
+}
+
 export function ItemCard({ item, onLog, onDelete, onEditTime, onRename }) {
   const [expanded, setExpanded] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -85,6 +94,15 @@ export function ItemCard({ item, onLog, onDelete, onEditTime, onRename }) {
     }
   }
 
+  function handleTimeClick(e) {
+    e.stopPropagation()
+    try {
+      dateInputRef.current.showPicker()
+    } catch {
+      dateInputRef.current.click()
+    }
+  }
+
   function handleLog(e) {
     e.stopPropagation()
     onLog(item.id)
@@ -117,7 +135,9 @@ export function ItemCard({ item, onLog, onDelete, onEditTime, onRename }) {
   }
 
   return (
-    <div ref={cardRef} className="rounded-2xl mb-3 bg-card shadow-sm select-none transition-all">
+    <div ref={cardRef} className="rounded-2xl mb-3 bg-card shadow-sm select-none transition-all"
+      style={{ borderLeft: `4px solid ${getRecencyColor(latestLog)}` }}
+    >
       {/* Collapsed view — always visible */}
       <div className="px-5 py-4 flex items-center gap-4 cursor-pointer" onClick={handleCardClick}>
         {/* Name — click to expand first, then editable when expanded */}
@@ -142,11 +162,12 @@ export function ItemCard({ item, onLog, onDelete, onEditTime, onRename }) {
           </span>
         )}
 
-        {/* Time — tap to open date picker, with extra left padding for tap target separation */}
+        {/* Time — click/tap to open date picker */}
         <span
           className="relative text-accent font-semibold text-lg tabular-nums whitespace-nowrap pl-2
             cursor-pointer hover:underline hover:decoration-accent/30 hover:underline-offset-4 transition-all"
           title={detailText}
+          onClick={handleTimeClick}
         >
           {timeText}
           {/* Date input overlaid on time text — native tap opens picker on iOS */}
@@ -155,9 +176,8 @@ export function ItemCard({ item, onLog, onDelete, onEditTime, onRename }) {
             type="date"
             defaultValue={toLocalDate(latestLog)}
             onChange={handleDateChange}
-            onClick={(e) => e.stopPropagation()}
             max={getTodayStr()}
-            className="absolute inset-0 opacity-0 cursor-pointer"
+            className="absolute inset-0 opacity-0 pointer-events-none"
             style={{ width: '100%', height: '100%' }}
             tabIndex={-1}
           />
