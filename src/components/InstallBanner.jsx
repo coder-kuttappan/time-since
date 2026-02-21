@@ -9,13 +9,13 @@ export function InstallBanner({ isIOS, onInstall, onDismiss }) {
             </p>
             {isIOS ? (
               <p className="text-xs text-text-secondary leading-relaxed">
-                Tap the <span className="inline-block align-text-bottom">
+                In Safari, tap <span className="inline-block align-text-bottom">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline">
                     <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
                     <polyline points="16 6 12 2 8 6" />
                     <line x1="12" y1="2" x2="12" y2="15" />
                   </svg>
-                </span> share button, then <strong>Add to Home Screen</strong>
+                </span> at the bottom of your screen, then <strong>Add to Home Screen</strong>
               </p>
             ) : (
               <p className="text-xs text-text-secondary">
