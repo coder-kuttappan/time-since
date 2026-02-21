@@ -11,7 +11,6 @@
   --color-accent-light: #5F9EA01A;
   --color-border: #E5E5E4;
   --font-sans: 'Inter', system-ui, sans-serif;
-  --font-display: 'Caveat', cursive;
 }
 
 .dark {
@@ -22,6 +21,10 @@
   --color-accent: #6DB8BA;
   --color-accent-light: #6DB8BA1A;
   --color-border: #3A3A3C;
+}
+
+html.dark {
+  color-scheme: dark;
 }
 
 body {
