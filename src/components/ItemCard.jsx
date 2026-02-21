@@ -1,105 +1,233 @@
-import { useState, useRef } from 'react'
-import { formatTimeSince, nextUnit } from '../utils/timeFormat'
+import { useState, useRef, useEffect } from 'react'
+import { formatTimeSince, formatDetailedTime, formatDate } from '../utils/timeFormat'
 
-export function ItemCard({ item, onLog, onDelete, onCycleUnit }) {
+function toLocalDate(timestamp) {
+  const d = new Date(timestamp)
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
+function getTodayStr() {
+  return new Date().toISOString().split('T')[0]
+}
+
+export function ItemCard({ item, onLog, onDelete, onEditTime, onRename }) {
+  const [expanded, setExpanded] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const [touchStart, setTouchStart] = useState(null)
-  const [swipeX, setSwipeX] = useState(0)
+  const [editingName, setEditingName] = useState(false)
+  const [nameValue, setNameValue] = useState(item.name)
+  const dateInputRef = useRef(null)
   const cardRef = useRef(null)
-  const longPressTimer = useRef(null)
+  const nameInputRef = useRef(null)
 
-  function handleTouchStart(e) {
-    setTouchStart(e.touches[0].clientX)
-    longPressTimer.current = setTimeout(() => {
-      setConfirmDelete(true)
-      setTouchStart(null)
-    }, 600)
-  }
+  const latestLog = item.logs[0]
+  const timeText = formatTimeSince(latestLog)
+  const detailText = formatDetailedTime(latestLog)
 
-  function handleTouchMove(e) {
-    if (touchStart === null) return
-    clearTimeout(longPressTimer.current)
-    const diff = touchStart - e.touches[0].clientX
-    if (diff > 0) setSwipeX(Math.min(diff, 100))
-    else setSwipeX(0)
-  }
-
-  function handleTouchEnd() {
-    clearTimeout(longPressTimer.current)
-    if (swipeX > 60) {
-      setConfirmDelete(true)
+  // Click outside to collapse
+  useEffect(() => {
+    if (!expanded) return
+    function handleClickOutside(e) {
+      if (cardRef.current && !cardRef.current.contains(e.target)) {
+        setExpanded(false)
+        setConfirmDelete(false)
+        if (editingName) {
+          commitNameEdit()
+        }
+      }
     }
-    setSwipeX(0)
-    setTouchStart(null)
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('touchstart', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+    }
+  })
+
+  // Focus name input when entering edit mode
+  useEffect(() => {
+    if (editingName && nameInputRef.current) {
+      nameInputRef.current.focus()
+      nameInputRef.current.select()
+    }
+  }, [editingName])
+
+  function commitNameEdit() {
+    const trimmed = nameValue.trim()
+    if (trimmed && trimmed !== item.name) {
+      onRename(item.id, trimmed)
+    } else {
+      setNameValue(item.name)
+    }
+    setEditingName(false)
   }
 
-  function handleConfirmDelete() {
+  function handleCardClick() {
+    if (confirmDelete) return
+    if (editingName) return
+    setExpanded(!expanded)
+  }
+
+  function handleNameClick(e) {
+    if (!expanded) return
+    e.stopPropagation()
+    setEditingName(true)
+  }
+
+  function handleNameKeyDown(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      commitNameEdit()
+    }
+    if (e.key === 'Escape') {
+      setNameValue(item.name)
+      setEditingName(false)
+    }
+  }
+
+  function handleTimeClick(e) {
+    e.stopPropagation()
+    dateInputRef.current?.showPicker()
+  }
+
+  function handleLog(e) {
+    e.stopPropagation()
+    onLog(item.id)
+    setExpanded(false)
+  }
+
+  function handleDateChange(e) {
+    const val = e.target.value
+    if (!val) return
+    const ts = new Date(`${val}T12:00`).getTime()
+    if (isNaN(ts) || ts > Date.now()) return
+    onEditTime(item.id, ts)
+  }
+
+  function handleDelete(e) {
+    e.stopPropagation()
+    setConfirmDelete(true)
+  }
+
+  function handleConfirmDelete(e) {
+    e.stopPropagation()
     onDelete(item.id)
+    setConfirmDelete(false)
+    setExpanded(false)
+  }
+
+  function handleCancelDelete(e) {
+    e.stopPropagation()
     setConfirmDelete(false)
   }
 
-  const timeText = formatTimeSince(item.lastLogged, item.displayUnit)
-
   return (
-    <div className="relative overflow-hidden rounded-2xl mb-3">
-      {/* Delete background */}
-      <div
-        className="absolute inset-0 bg-red-100 flex items-center justify-end pr-6 rounded-2xl"
-        style={{ opacity: swipeX / 100 }}
-      >
-        <span className="text-red-400 text-sm font-medium">delete</span>
-      </div>
+    <div ref={cardRef} className="rounded-2xl mb-3 bg-card shadow-sm select-none transition-all">
+      {/* Collapsed view — always visible */}
+      <div className="px-5 py-4 flex items-center gap-4 cursor-pointer" onClick={handleCardClick}>
+        {/* Name — click to expand first, then editable when expanded */}
+        {editingName ? (
+          <input
+            ref={nameInputRef}
+            type="text"
+            value={nameValue}
+            onChange={(e) => setNameValue(e.target.value)}
+            onBlur={commitNameEdit}
+            onKeyDown={handleNameKeyDown}
+            onClick={(e) => e.stopPropagation()}
+            className="flex-1 text-base bg-transparent outline-none border-b border-accent/30
+              text-text cursor-text select-text"
+          />
+        ) : (
+          <span
+            className={`flex-1 text-base truncate text-text ${expanded ? 'cursor-text' : ''}`}
+            onClick={expanded ? handleNameClick : undefined}
+          >
+            {item.name}
+          </span>
+        )}
 
-      {/* Card */}
-      <div
-        ref={cardRef}
-        className="relative bg-card rounded-2xl px-5 py-4 shadow-sm flex items-center gap-3 select-none"
-        style={{ transform: `translateX(-${swipeX}px)` }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        {/* Log button */}
-        <button
-          onClick={() => onLog(item.id)}
-          className="w-9 h-9 rounded-full border-2 border-accent/30 flex items-center justify-center
-            hover:bg-accent/10 active:bg-accent/20 transition-colors shrink-0 cursor-pointer"
-          aria-label={`Log ${item.name}`}
-        >
-          <div className="w-2.5 h-2.5 rounded-full bg-accent/60" />
-        </button>
-
-        {/* Name */}
-        <span className="flex-1 text-base truncate">{item.name}</span>
-
-        {/* Time display - tappable to cycle unit */}
-        <button
-          onClick={() => onCycleUnit(item.id, nextUnit(item.displayUnit))}
-          className="text-accent font-semibold text-lg tabular-nums cursor-pointer
-            hover:text-accent/80 transition-colors whitespace-nowrap"
+        {/* Time — tap to open date picker, with extra left padding for tap target separation */}
+        <span
+          className="text-accent font-semibold text-lg tabular-nums whitespace-nowrap pl-2
+            cursor-pointer hover:underline hover:decoration-accent/30 hover:underline-offset-4 transition-all"
+          onClick={handleTimeClick}
+          title={detailText}
         >
           {timeText}
-        </button>
+        </span>
+
+        {/* Hidden date input */}
+        <input
+          ref={dateInputRef}
+          type="date"
+          defaultValue={toLocalDate(latestLog)}
+          onChange={handleDateChange}
+          max={getTodayStr()}
+          className="absolute opacity-0 pointer-events-none w-0 h-0"
+          tabIndex={-1}
+        />
       </div>
 
-      {/* Delete confirmation overlay */}
-      {confirmDelete && (
-        <div className="absolute inset-0 bg-card/95 backdrop-blur-sm rounded-2xl flex items-center justify-center gap-3 z-10">
-          <span className="text-sm text-text-secondary">Delete?</span>
-          <button
-            onClick={handleConfirmDelete}
-            className="px-4 py-1.5 rounded-xl bg-red-100 text-red-500 text-sm font-medium
-              hover:bg-red-200 transition-colors cursor-pointer"
-          >
-            Delete
-          </button>
-          <button
-            onClick={() => setConfirmDelete(false)}
-            className="px-4 py-1.5 rounded-xl bg-border text-text-secondary text-sm
-              hover:bg-border/80 transition-colors cursor-pointer"
-          >
-            Cancel
-          </button>
+      {/* Expanded view */}
+      {expanded && (
+        <div className="px-5 pb-4 pt-0" onClick={(e) => e.stopPropagation()}>
+          <div className="border-t border-border pt-3">
+            {/* Actions row */}
+            <div className="flex items-center gap-2 mb-3">
+              <button
+                onClick={handleLog}
+                className="px-4 py-2 rounded-xl bg-accent/10 text-accent text-sm font-medium
+                  hover:bg-accent/20 transition-colors cursor-pointer"
+              >
+                did it again
+              </button>
+              <div className="flex-1" />
+              {!confirmDelete ? (
+                <button
+                  onClick={handleDelete}
+                  className="px-4 py-2 rounded-xl text-text-secondary/50 text-sm
+                    hover:bg-red-50 hover:text-red-400 transition-colors cursor-pointer"
+                >
+                  delete
+                </button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleConfirmDelete}
+                    className="px-3 py-1.5 rounded-xl bg-red-100 text-red-500 text-sm font-medium
+                      hover:bg-red-200 transition-colors cursor-pointer"
+                  >
+                    confirm
+                  </button>
+                  <button
+                    onClick={handleCancelDelete}
+                    className="px-3 py-1.5 rounded-xl bg-border text-text-secondary text-sm
+                      hover:bg-border/80 transition-colors cursor-pointer"
+                  >
+                    cancel
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* History — only past entries, not the current one */}
+            {item.logs.length > 1 && (
+              <div>
+                <span className="text-xs text-text-secondary/60 uppercase tracking-wider">
+                  history
+                </span>
+                <div className="mt-1.5 space-y-1">
+                  {item.logs.slice(1).map((ts, i) => (
+                    <div key={`${ts}-${i}`} className="flex items-center justify-between text-sm">
+                      <span className="text-text-secondary">{formatDate(ts)}</span>
+                      <span className="text-text-secondary/50 text-xs">{formatTimeSince(ts)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
