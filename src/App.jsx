@@ -26,6 +26,7 @@ export default function App() {
     try { return JSON.parse(localStorage.getItem('ts-dismissed-examples') || '[]') } catch { return [] }
   })
   const [sortMode, setSortMode] = useState(() => localStorage.getItem('ts-sort-mode') || null)
+  const [pendingDateItemId, setPendingDateItemId] = useState(null)
 
   const cycleSortMode = useCallback(() => {
     setSortMode((prev) => {
@@ -74,14 +75,14 @@ export default function App() {
   }, [])
 
   const handleAdoptExample = useCallback((example) => {
-    adoptExample(example)
+    const item = adoptExample(example)
     setDismissedExamples((prev) => {
       const next = [...prev, example.id]
       localStorage.setItem('ts-dismissed-examples', JSON.stringify(next))
       return next
     })
-    showToast(`Added "${example.name}"`)
-  }, [adoptExample, showToast])
+    setPendingDateItemId(item.id)
+  }, [adoptExample])
 
   const visibleExamples = examples.filter((e) => !dismissedExamples.includes(e.id))
 
@@ -156,6 +157,8 @@ export default function App() {
           onAdoptExample={handleAdoptExample}
           onAdoptAllExamples={handleAdoptAllExamples}
           onDismissAllExamples={handleDismissAllExamples}
+          pendingDateItemId={pendingDateItemId}
+          onClearPendingDate={() => setPendingDateItemId(null)}
         />
       </div>
 

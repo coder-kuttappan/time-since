@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { formatTimeSince, formatDetailedTime, formatDate } from '../utils/timeFormat'
 
 function toLocalDate(timestamp) {
@@ -22,10 +22,17 @@ function getRecencyColor(timestamp) {
   return '#A08090'
 }
 
-function ItemSheet({ item, onLog, onDelete, onEditTime, onRename, onClose }) {
+function ItemSheet({ item, onLog, onDelete, onEditTime, onRename, onClose, focusDate }) {
   const [nameValue, setNameValue] = useState(item.name)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const latestLog = item.logs[0]
+  const dateInputRef = useRef(null)
+
+  useEffect(() => {
+    if (focusDate && dateInputRef.current) {
+      try { dateInputRef.current.showPicker() } catch { /* iOS doesn't support showPicker */ }
+    }
+  }, [])
 
   function handleNameBlur() {
     const trimmed = nameValue.trim()
@@ -79,6 +86,7 @@ function ItemSheet({ item, onLog, onDelete, onEditTime, onRename, onClose }) {
         <div className="border-b border-border">
           <p className="px-6 pt-4 text-xs text-text-secondary/50 uppercase tracking-wide">Date</p>
           <input
+            ref={dateInputRef}
             type="date"
             value={toLocalDate(latestLog)}
             onChange={handleDateChange}
@@ -144,11 +152,16 @@ function ItemSheet({ item, onLog, onDelete, onEditTime, onRename, onClose }) {
   )
 }
 
-export function ItemCard({ item, onLog, onDelete, onEditTime, onRename }) {
-  const [sheetOpen, setSheetOpen] = useState(false)
+export function ItemCard({ item, onLog, onDelete, onEditTime, onRename, openWithDatePicker, onClearPendingDate }) {
+  const [sheetOpen, setSheetOpen] = useState(openWithDatePicker || false)
   const latestLog = item.logs[0]
   const timeText = formatTimeSince(latestLog)
   const detailText = formatDetailedTime(latestLog)
+
+  function handleClose() {
+    setSheetOpen(false)
+    if (openWithDatePicker) onClearPendingDate?.()
+  }
 
   return (
     <>
@@ -175,7 +188,8 @@ export function ItemCard({ item, onLog, onDelete, onEditTime, onRename }) {
           onDelete={onDelete}
           onEditTime={onEditTime}
           onRename={onRename}
-          onClose={() => setSheetOpen(false)}
+          onClose={handleClose}
+          focusDate={openWithDatePicker}
         />
       )}
     </>

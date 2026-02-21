@@ -1,7 +1,7 @@
 import { ItemCard } from './ItemCard'
 import { ExampleCard } from './ExampleCard'
 
-export function ItemList({ items, examples, onLog, onDelete, onEditTime, onRename, onDismissExample, onAdoptExample, onAdoptAllExamples, onDismissAllExamples }) {
+export function ItemList({ items, examples, onLog, onDelete, onEditTime, onRename, onDismissExample, onAdoptExample, onAdoptAllExamples, onDismissAllExamples, pendingDateItemId, onClearPendingDate }) {
   const hasItems = items.length > 0
   const hasExamples = examples.length > 0
   const isEmpty = !hasItems && !hasExamples
@@ -25,6 +25,8 @@ export function ItemList({ items, examples, onLog, onDelete, onEditTime, onRenam
           onDelete={onDelete}
           onEditTime={onEditTime}
           onRename={onRename}
+          openWithDatePicker={item.id === pendingDateItemId}
+          onClearPendingDate={onClearPendingDate}
         />
       ))}
 
