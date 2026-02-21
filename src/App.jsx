@@ -4,6 +4,7 @@ import { ItemList } from './components/ItemList'
 import { Toast } from './components/Toast'
 import { InstallBanner } from './components/InstallBanner'
 import { ThemeToggle } from './components/ThemeToggle'
+import { TipsCard } from './components/TipsCard'
 import { useItems } from './hooks/useItems'
 import { useToast } from './hooks/useToast'
 import { useInstallPrompt } from './hooks/useInstallPrompt'
@@ -78,6 +79,8 @@ export default function App() {
         {showBanner && (
           <InstallBanner isIOS={isIOSDevice} onInstall={install} onDismiss={dismiss} />
         )}
+
+        <TipsCard />
 
         <AddItem onAdd={handleAdd} />
 
