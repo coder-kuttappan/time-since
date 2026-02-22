@@ -37,8 +37,17 @@ function ItemSheet({ item, onLog, onDelete, onEditTime, onRename, onClose }) {
   function handleDateChange(e) {
     const val = e.target.value
     if (!val) return
-    const ts = new Date(`${val}T12:00`).getTime()
-    if (isNaN(ts) || ts > Date.now()) return
+    const [year, month, day] = val.split('-').map(Number)
+    // Noon local time avoids DST midnight edge cases
+    const ts = new Date(year, month - 1, day, 12, 0, 0).getTime()
+    if (isNaN(ts)) return
+    // Reject future dates using calendar comparison (not epoch, so today-before-noon works)
+    const today = new Date()
+    if (
+      year > today.getFullYear() ||
+      (year === today.getFullYear() && month - 1 > today.getMonth()) ||
+      (year === today.getFullYear() && month - 1 === today.getMonth() && day > today.getDate())
+    ) return
     onEditTime(item.id, ts)
   }
 
