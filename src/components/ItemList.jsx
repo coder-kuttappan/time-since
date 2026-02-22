@@ -18,7 +18,7 @@ export function ItemList({ items, examples, onLog, onDelete, onEditTime, onEditC
 
       {examples.length > 0 && (
         <div className="pointer-events-none">
-          <p className="text-xs text-text-secondary/40 uppercase tracking-wider mb-3 px-1">e.g.</p>
+          <p className="text-xs text-text-secondary/40 uppercase tracking-wider mb-3 px-1">Examples</p>
           {examples.map((item) => (
             <ExampleCard key={item.id} item={item} />
           ))}
