@@ -5,7 +5,6 @@ import { Toast } from './components/Toast'
 import { InstallBanner } from './components/InstallBanner'
 import { ThemeToggle } from './components/ThemeToggle'
 import { Menu } from './components/Menu'
-import { UpdatePrompt } from './components/UpdatePrompt'
 import { useItems } from './hooks/useItems'
 import { useToast } from './hooks/useToast'
 import { useInstallPrompt } from './hooks/useInstallPrompt'
@@ -21,7 +20,7 @@ export default function App() {
   const { showBanner, isIOSDevice, install, dismiss } = useInstallPrompt()
   const { toast, showToast, handleUndo } = useToast()
   const { theme, toggleTheme } = useTheme()
-  const { needRefresh, applyUpdate, dismissUpdate } = useServiceWorker()
+  useServiceWorker()
   const [sortMode, setSortMode] = useState(() => localStorage.getItem('ts-sort-mode') || null)
 
   const cycleSortMode = useCallback(() => {
@@ -122,7 +121,6 @@ export default function App() {
       </div>
 
       <Toast toast={toast} onUndo={handleUndo} />
-      {needRefresh && <UpdatePrompt onUpdate={applyUpdate} onDismiss={dismissUpdate} />}
     </div>
   )
 }
