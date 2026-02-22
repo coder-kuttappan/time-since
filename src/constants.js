@@ -1,5 +1,6 @@
 export const STORAGE_KEY = 'time-since-items'
 export const TOAST_DURATION = 4000
+export const CATEGORIES = ['Health', 'Grooming', 'Home', 'Maintenance', 'Relationships', 'Work']
 
 const now = Date.now()
 const days = (d) => now - d * 86400000

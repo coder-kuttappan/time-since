@@ -11,27 +11,31 @@ const HELP_ITEMS = [
   },
   {
     label: 'Logging',
-    detail: 'Tap a card to expand it, then tap "did it again" to record a new entry.',
+    detail: 'Tap a card to open it, then tap "did it again" to record a new entry.',
   },
   {
     label: 'Edit date',
-    detail: 'Expand a card to see the logged date and change it.',
+    detail: 'Tap a card and change the date to when you actually did it.',
+  },
+  {
+    label: 'Category',
+    detail: 'Tap a card and pick a category — Health, Grooming, Home, Maintenance, Relationships, or Work. A filter bar appears above your list once any item has a category.',
   },
   {
     label: 'Rename',
-    detail: 'Tap the item name while the card is expanded to edit it inline.',
+    detail: 'Tap a card and tap the item name to edit it inline.',
   },
   {
     label: 'Delete',
-    detail: 'Expand a card and tap Delete. You\'ll get a confirmation before it\'s gone.',
+    detail: 'Tap a card and tap Delete. You\'ll get a confirmation before it\'s gone.',
   },
   {
     label: 'History',
-    detail: 'Every time you log something, the previous date is saved. Expand a card to see the full history.',
+    detail: 'Every time you log something, the previous date is saved. Tap a card to see the full history.',
   },
   {
     label: 'Sort',
-    detail: 'Use the sort button above your list to order by most recently done or longest overdue.',
+    detail: 'Tap ⋯ → Sort to order by most recently done or longest overdue.',
   },
   {
     label: 'Backup',
@@ -84,10 +88,11 @@ function HelpModal({ onClose }) {
   )
 }
 
-export function Menu({ onExport, onImport, onReset, hasItems }) {
+export function Menu({ onExport, onImport, onReset, hasItems, sortMode, onSortChange }) {
   const [open, setOpen] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
   const [confirmReset, setConfirmReset] = useState(false)
+  const [showSort, setShowSort] = useState(false)
   const menuRef = useRef(null)
 
   useEffect(() => {
@@ -96,6 +101,7 @@ export function Menu({ onExport, onImport, onReset, hasItems }) {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setOpen(false)
         setConfirmReset(false)
+        setShowSort(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -109,6 +115,7 @@ export function Menu({ onExport, onImport, onReset, hasItems }) {
   function close() {
     setOpen(false)
     setConfirmReset(false)
+    setShowSort(false)
   }
 
   return (
@@ -134,6 +141,42 @@ export function Menu({ onExport, onImport, onReset, hasItems }) {
             >
               Help
             </button>
+            <div className="border-t border-border" />
+            {showSort ? (
+              <div className="px-4 py-3">
+                <p className="text-xs text-text-secondary/50 mb-2">Sort by</p>
+                <div className="flex gap-1.5">
+                  {[
+                    { label: '↑ New', value: 'newest' },
+                    { label: '↓ Old', value: 'oldest' },
+                  ].map(({ label, value }) => (
+                    <button
+                      key={value}
+                      onClick={() => { onSortChange(sortMode === value ? null : value); close() }}
+                      className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                        sortMode === value
+                          ? 'bg-accent text-white'
+                          : 'bg-border text-text-secondary hover:bg-border/80'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowSort(true)}
+                className="w-full text-left px-4 py-3 text-sm text-text hover:bg-border/40 transition-colors cursor-pointer flex items-center justify-between"
+              >
+                <span>Sort</span>
+                {sortMode && (
+                  <span className="text-xs text-text-secondary/50">
+                    {sortMode === 'newest' ? 'newest first' : 'oldest first'}
+                  </span>
+                )}
+              </button>
+            )}
             <div className="border-t border-border" />
             <button
               onClick={() => { onExport(); close() }}
