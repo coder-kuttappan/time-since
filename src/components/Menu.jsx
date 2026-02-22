@@ -39,7 +39,7 @@ const HELP_ITEMS = [
   },
   {
     label: 'Backup',
-    detail: 'Your data lives only on this device — nothing is sent to any server. Use Export to save a backup file, and Import to restore it or move your data to another device.',
+    detail: 'Your data lives only on this device — nothing is sent to any server. Clearing your browser data or uninstalling the app will erase everything. Use Export regularly to save a backup, and Import to restore it or move to another device.',
   },
 ]
 
