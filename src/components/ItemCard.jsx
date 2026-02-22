@@ -63,7 +63,8 @@ function ItemSheet({ item, onLog, onDelete, onEditTime, onRename, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/30 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pt-4 bg-black/30 backdrop-blur-sm"
+      style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}
       onClick={onClose}
     >
       <div
