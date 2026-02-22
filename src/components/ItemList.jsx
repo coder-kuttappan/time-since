@@ -1,7 +1,7 @@
 import { ItemCard } from './ItemCard'
 import { ExampleCard } from './ExampleCard'
 
-export function ItemList({ items, examples, onLog, onDelete, onEditTime, onRename }) {
+export function ItemList({ items, examples, onLog, onDelete, onEditTime, onEditCategory, onRename }) {
   return (
     <div>
       {items.map((item) => (
@@ -11,6 +11,7 @@ export function ItemList({ items, examples, onLog, onDelete, onEditTime, onRenam
           onLog={onLog}
           onDelete={onDelete}
           onEditTime={onEditTime}
+          onEditCategory={onEditCategory}
           onRename={onRename}
         />
       ))}

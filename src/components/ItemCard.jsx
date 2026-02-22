@@ -1,5 +1,6 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { formatTimeSince, formatDetailedTime, formatDate } from '../utils/timeFormat'
+import { CATEGORIES } from '../constants'
 
 function toLocalDate(timestamp) {
   const d = new Date(timestamp)
@@ -22,11 +23,10 @@ function getRecencyColor(timestamp) {
   return '#A08090'
 }
 
-function ItemSheet({ item, onLog, onDelete, onEditTime, onRename, onClose }) {
+function ItemSheet({ item, onLog, onDelete, onEditTime, onEditCategory, onRename, onClose }) {
   const [nameValue, setNameValue] = useState(item.name)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const latestLog = item.logs[0]
-  const dateInputRef = useRef(null)
 
   function handleNameBlur() {
     const trimmed = nameValue.trim()
@@ -86,36 +86,8 @@ function ItemSheet({ item, onLog, onDelete, onEditTime, onRename, onClose }) {
           </p>
         </div>
 
-        {/* Date edit — full-row input, whole area is tappable */}
-        <div className="border-b border-border">
-          <p className="px-6 pt-4 text-xs text-text-secondary/50 uppercase tracking-wide">Date</p>
-          <input
-            ref={dateInputRef}
-            type="date"
-            value={toLocalDate(latestLog)}
-            onChange={handleDateChange}
-            max={getTodayStr()}
-            className="w-full px-6 py-3 pb-4 text-sm text-text-secondary bg-transparent outline-none cursor-pointer"
-          />
-        </div>
-
-        {/* History */}
-        {item.logs.length > 1 && (
-          <div className="px-6 py-4 border-b border-border max-h-36 overflow-y-auto">
-            <p className="text-xs text-text-secondary/50 uppercase tracking-wide mb-2">History</p>
-            <div className="space-y-1.5">
-              {item.logs.slice(1).map((ts, i) => (
-                <div key={`${ts}-${i}`} className="flex items-center justify-between">
-                  <span className="text-sm text-text-secondary">{formatDate(ts)}</span>
-                  <span className="text-xs text-text-secondary/50">{formatTimeSince(ts)}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="px-6 py-4 flex gap-2">
+        {/* Actions — near top so they're away from screen edge and keyboard */}
+        <div className="px-6 py-4 border-b border-border flex gap-2">
           <button
             onClick={handleLog}
             className="flex-1 py-2.5 rounded-xl bg-accent/10 text-accent text-sm font-medium
@@ -134,7 +106,7 @@ function ItemSheet({ item, onLog, onDelete, onEditTime, onRename, onClose }) {
               </button>
               <button
                 onClick={() => setConfirmDelete(false)}
-                className="px-4 py-2.5 rounded-xl bg-border text-text-secondary text-sm
+                className="px-3 py-2.5 rounded-xl bg-border text-text-secondary text-sm
                   hover:bg-border/80 transition-colors cursor-pointer"
               >
                 cancel
@@ -143,20 +115,73 @@ function ItemSheet({ item, onLog, onDelete, onEditTime, onRename, onClose }) {
           ) : (
             <button
               onClick={() => setConfirmDelete(true)}
-              className="px-4 py-2.5 rounded-xl text-text-secondary/50 text-sm
+              className="px-3 py-2.5 rounded-xl bg-border/60 text-text-secondary/50
                 hover:bg-red-50 hover:text-red-400 dark:hover:bg-red-950 dark:hover:text-red-400
                 transition-colors cursor-pointer"
+              aria-label="Delete"
             >
-              delete
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="m19 6-.867 12.142A2 2 0 0 1 16.138 20H7.862a2 2 0 0 1-1.995-1.858L5 6"/>
+                <path d="M10 11v6M14 11v6"/>
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+              </svg>
             </button>
           )}
         </div>
+
+        {/* Date edit — full-row input, whole area is tappable */}
+        <div className="border-b border-border">
+          <p className="px-6 pt-4 text-xs text-text-secondary/50 uppercase tracking-wide">Date</p>
+          <input
+            type="date"
+            value={toLocalDate(latestLog)}
+            onChange={handleDateChange}
+            max={getTodayStr()}
+            className="w-full px-6 py-3 pb-4 text-sm text-text-secondary bg-transparent outline-none cursor-pointer"
+          />
+        </div>
+
+        {/* Category */}
+        <div className="px-6 py-4 border-b border-border">
+          <p className="text-xs text-text-secondary/50 uppercase tracking-wide mb-3">Category</p>
+          <div className="flex flex-wrap gap-2">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => onEditCategory(item.id, item.category === cat ? null : cat)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors cursor-pointer ${
+                  item.category === cat
+                    ? 'bg-accent text-white'
+                    : 'bg-border text-text-secondary hover:bg-border/80'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* History */}
+        {item.logs.length > 1 && (
+          <div className="px-6 py-4 border-b border-border max-h-36 overflow-y-auto">
+            <p className="text-xs text-text-secondary/50 uppercase tracking-wide mb-2">History</p>
+            <div className="space-y-1.5">
+              {item.logs.slice(1).map((ts, i) => (
+                <div key={`${ts}-${i}`} className="flex items-center justify-between">
+                  <span className="text-sm text-text-secondary">{formatDate(ts)}</span>
+                  <span className="text-xs text-text-secondary/50">{formatTimeSince(ts)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
-export function ItemCard({ item, onLog, onDelete, onEditTime, onRename }) {
+export function ItemCard({ item, onLog, onDelete, onEditTime, onEditCategory, onRename }) {
   const [sheetOpen, setSheetOpen] = useState(false)
   const latestLog = item.logs[0]
   const timeText = formatTimeSince(latestLog)
@@ -186,6 +211,7 @@ export function ItemCard({ item, onLog, onDelete, onEditTime, onRename }) {
           onLog={onLog}
           onDelete={onDelete}
           onEditTime={onEditTime}
+          onEditCategory={onEditCategory}
           onRename={onRename}
           onClose={() => setSheetOpen(false)}
         />

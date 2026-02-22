@@ -88,6 +88,14 @@ export function useItems() {
     )
   }, [])
 
+  const editCategory = useCallback((id, category) => {
+    setItems((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, category: category ?? null } : item
+      )
+    )
+  }, [])
+
   const renameItem = useCallback((id, newName) => {
     const trimmed = newName.trim()
     if (!trimmed) return
@@ -144,7 +152,7 @@ export function useItems() {
 
   return {
     items, examples, addItem, logItem, undoLog,
-    deleteItem, undoDelete, editTime, renameItem, resetAll,
+    deleteItem, undoDelete, editTime, editCategory, renameItem, resetAll,
     exportData, importData,
   }
 }

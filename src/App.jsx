@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from 'react'
 import { AddItem } from './components/AddItem'
 import { ItemList } from './components/ItemList'
+import { FilterBar } from './components/FilterBar'
 import { Toast } from './components/Toast'
 import { InstallBanner } from './components/InstallBanner'
 import { ThemeToggle } from './components/ThemeToggle'
@@ -14,7 +15,7 @@ import { useServiceWorker } from './hooks/useServiceWorker'
 export default function App() {
   const {
     items, examples, addItem, logItem, undoLog,
-    deleteItem, undoDelete, editTime, renameItem, resetAll,
+    deleteItem, undoDelete, editTime, editCategory, renameItem, resetAll,
     exportData, importData,
   } = useItems()
   const { showBanner, isIOSDevice, install, dismiss } = useInstallPrompt()
@@ -22,14 +23,12 @@ export default function App() {
   const { theme, toggleTheme } = useTheme()
   useServiceWorker()
   const [sortMode, setSortMode] = useState(() => localStorage.getItem('ts-sort-mode') || null)
+  const [filterCategory, setFilterCategory] = useState(null)
 
-  const cycleSortMode = useCallback(() => {
-    setSortMode((prev) => {
-      const next = prev === null ? 'newest' : prev === 'newest' ? 'oldest' : null
-      if (next === null) localStorage.removeItem('ts-sort-mode')
-      else localStorage.setItem('ts-sort-mode', next)
-      return next
-    })
+  const changeSortMode = useCallback((mode) => {
+    setSortMode(mode)
+    if (mode === null) localStorage.removeItem('ts-sort-mode')
+    else localStorage.setItem('ts-sort-mode', mode)
   }, [])
 
   const sortedItems = useMemo(() => {
@@ -38,6 +37,11 @@ export default function App() {
       sortMode === 'newest' ? b.logs[0] - a.logs[0] : a.logs[0] - b.logs[0]
     )
   }, [items, sortMode])
+
+  const filteredItems = useMemo(() => {
+    if (!filterCategory) return sortedItems
+    return sortedItems.filter((i) => i.category === filterCategory)
+  }, [sortedItems, filterCategory])
 
   const handleAdd = useCallback((name) => {
     const item = addItem(name)
@@ -81,6 +85,8 @@ export default function App() {
               onImport={importData}
               onReset={handleReset}
               hasItems={items.length > 0}
+              sortMode={sortMode}
+              onSortChange={changeSortMode}
             />
           </div>
         </div>
@@ -91,25 +97,15 @@ export default function App() {
 
         <AddItem onAdd={handleAdd} />
 
-        {items.length > 1 && (
-          <div className="flex justify-end mb-2">
-            <button
-              onClick={cycleSortMode}
-              className={`text-xs transition-colors cursor-pointer ${
-                sortMode ? 'text-accent font-medium' : 'text-text-secondary/40 hover:text-text-secondary/70'
-              }`}
-            >
-              {sortMode === 'newest' ? '↑ newest first' : sortMode === 'oldest' ? '↓ oldest first' : 'sort'}
-            </button>
-          </div>
-        )}
+        <FilterBar items={items} filter={filterCategory} onFilter={setFilterCategory} />
 
         <ItemList
-          items={sortedItems}
+          items={filteredItems}
           examples={examples}
           onLog={handleLog}
           onDelete={handleDelete}
           onEditTime={editTime}
+          onEditCategory={editCategory}
           onRename={renameItem}
         />
       </div>
