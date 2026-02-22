@@ -3,8 +3,14 @@ const MS_PER_DAY = MS_PER_HOUR * 24
 
 export function formatTimeSince(timestamp) {
   const ms = Date.now() - timestamp
-  const hours = Math.floor(ms / MS_PER_HOUR)
-  const days = Math.floor(ms / MS_PER_DAY)
+
+  // Use calendar-day comparison in local timezone so "yesterday" is always "1 day"
+  // regardless of what time the entry was logged or what time it currently is
+  const now = new Date()
+  const then = new Date(timestamp)
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+  const thenStart = new Date(then.getFullYear(), then.getMonth(), then.getDate()).getTime()
+  const days = Math.round((todayStart - thenStart) / MS_PER_DAY)
 
   if (days < 1) return 'today'
   if (days < 7) return days === 1 ? '1 day' : `${days} days`
