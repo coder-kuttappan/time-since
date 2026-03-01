@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://timesince.coderkuttappan.com/sitemap.xml
